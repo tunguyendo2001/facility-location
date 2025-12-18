@@ -1,0 +1,102 @@
+retail-site-dss/
+│
+├── docker-compose.yml                  # Docker Compose configuration
+├── .env.example                        # Environment variables template
+├── .gitignore                          # Git ignore file
+├── README.md                           # Project documentation
+│
+├── manager/                            # Spring Boot Application
+│   ├── Dockerfile                      # Docker image for Spring Boot
+│   ├── pom.xml                         # Maven dependencies
+│   ├── mvnw                            # Maven wrapper (Unix)
+│   ├── mvnw.cmd                        # Maven wrapper (Windows)
+│   ├── .mvn/                           # Maven wrapper files
+│   │   └── wrapper/
+│   │       ├── maven-wrapper.jar
+│   │       └── maven-wrapper.properties
+│   │
+│   └── src/
+│       ├── main/
+│       │   ├── java/
+│       │   │   └── com/
+│       │   │       └── retaildss/
+│       │   │           ├── RetailDssApplication.java
+│       │   │           │
+│       │   │           ├── config/
+│       │   │           │   ├── CorsConfig.java
+│       │   │           │   └── JacksonConfig.java
+│       │   │           │
+│       │   │           ├── entity/
+│       │   │           │   ├── District.java
+│       │   │           │   ├── ExpertCriteriaConfig.java
+│       │   │           │   └── PotentialSite.java
+│       │   │           │
+│       │   │           ├── repository/
+│       │   │           │   ├── DistrictRepository.java
+│       │   │           │   ├── ExpertCriteriaConfigRepository.java
+│       │   │           │   └── PotentialSiteRepository.java
+│       │   │           │
+│       │   │           ├── service/
+│       │   │           │   ├── AnalysisService.java
+│       │   │           │   ├── DistrictService.java
+│       │   │           │   └── SiteService.java
+│       │   │           │
+│       │   │           ├── controller/
+│       │   │           │   ├── AnalysisController.java
+│       │   │           │   ├── DistrictController.java
+│       │   │           │   └── SiteController.java
+│       │   │           │
+│       │   │           ├── dto/
+│       │   │           │   ├── AnalysisResponse.java
+│       │   │           │   ├── TopSiteDto.java
+│       │   │           │   └── SiteStatisticsDto.java
+│       │   │           │
+│       │   │           └── exception/
+│       │   │               ├── GlobalExceptionHandler.java
+│       │   │               └── ResourceNotFoundException.java
+│       │   │
+│       │   └── resources/
+│       │       ├── application.yml                 # Main config
+│       │       ├── application-dev.yml             # Dev profile
+│       │       ├── application-prod.yml            # Production profile
+│       │       └── logback-spring.xml              # Logging config
+│       │
+│       └── test/
+│           └── java/
+│               └── com/
+│                   └── retaildss/
+│                       ├── RetailDssApplicationTests.java
+│                       ├── service/
+│                       │   └── AnalysisServiceTest.java
+│                       └── controller/
+│                           └── AnalysisControllerTest.java
+│
+├── mcdm/                               # Python Scripts implement Multi-Criteria Decision Making
+│   ├── Dockerfile                      # Docker image for Python
+│   ├── requirements.txt                # Python dependencies
+│   ├── topsis_analysis.py              # TOPSIS algorithm
+│   ├── generate_data.py                # Data generator
+│   └── utils/
+│       ├── __init__.py
+│       ├── db_connector.py             # Database utilities
+│       └── visualization.py            # Data visualization (optional)
+│
+├── mysql/                              # Database Scripts
+│   ├── Dockerfile                      # Docker image for MySQL
+│   ├── init/
+│   │   ├── 01-schema.sql              # Database schema
+│   │   ├── 02-seed-districts.sql      # Initial districts data
+│   │   └── 03-seed-configs.sql        # Initial config data
+│   └── backup/
+│       └── .gitkeep
+│
+├── nginx/                              # Nginx Configuration (Optional)
+│   ├── Dockerfile
+│   └── nginx.conf
+│
+└── docs/                               # Documentation
+    ├── API.md                          # API documentation
+    ├── ARCHITECTURE.md                 # Architecture overview
+    ├── DEPLOYMENT.md                   # Deployment guide
+    └── images/
+        └── .gitkeep
