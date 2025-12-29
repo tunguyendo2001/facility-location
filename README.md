@@ -94,7 +94,7 @@ docker-compose exec python-analyzer python generate_data.py
 curl http://localhost:8080/api/analysis/run
 
 # Option B: Chạy trực tiếp Python script
-docker-compose exec python-analyzer python topsis_analysis.py
+docker-compose exec python-analyzer python topsis.py
 ```
 
 #### Bước 6: Xem kết quả
@@ -283,7 +283,7 @@ docker-compose exec mysql mysql -u retailuser -p -e "SHOW DATABASES;"
 docker-compose logs python-analyzer
 
 # Test manually
-docker-compose exec python-analyzer python topsis_analysis.py
+docker-compose exec python-analyzer python topsis.py
 ```
 
 ### Port conflicts

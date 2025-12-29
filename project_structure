@@ -74,7 +74,7 @@ retail-site-dss/
 ├── mcdm/                               # Python Scripts implement Multi-Criteria Decision Making
 │   ├── Dockerfile                      # Docker image for Python
 │   ├── requirements.txt                # Python dependencies
-│   ├── topsis_analysis.py              # TOPSIS algorithm
+│   ├── topsis.py                       # TOPSIS algorithm
 │   ├── generate_data.py                # Data generator
 │   └── utils/
 │       ├── __init__.py

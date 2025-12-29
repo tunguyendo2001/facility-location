@@ -27,7 +27,7 @@ server:
 python:
   executable: ${PYTHON_EXECUTABLE:python3}
   script:
-    path: ${PYTHON_SCRIPT_PATH:mcdm/topsis_analysis.py}
+    path: ${PYTHON_SCRIPT_PATH:mcdm/topsis.py}
 
 # Actuator endpoints
 management:

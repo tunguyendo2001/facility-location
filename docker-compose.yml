@@ -59,7 +59,7 @@ services:
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-retailuser}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-retailpass}
       PYTHON_EXECUTABLE: python3
-      PYTHON_SCRIPT_PATH: /app/mcdm/topsis_analysis.py
+      PYTHON_SCRIPT_PATH: /app/mcdm/topsis.py
     ports:
       - "0.0.0.0:${BACKEND_PORT:-8080}:8080"
     volumes:

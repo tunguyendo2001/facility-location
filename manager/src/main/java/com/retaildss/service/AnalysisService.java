@@ -12,7 +12,7 @@ import java.io.InputStreamReader;
 @Slf4j
 public class AnalysisService {
     
-    @Value("${python.script.path:mcdm/topsis_analysis.py}")
+    @Value("${python.script.path:mcdm/topsis.py}")
     private String pythonScriptPath;
     
     @Value("${python.executable:python3}")
