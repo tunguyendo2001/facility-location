@@ -71,16 +71,46 @@ retail-site-dss/
 │                       └── controller/
 │                           └── AnalysisControllerTest.java
 │
-├── mcdm/                               # Python Scripts implement Multi-Criteria Decision Making
-│   ├── Dockerfile                      # Docker image for Python
-│   ├── requirements.txt                # Python dependencies
-│   ├── topsis.py                       # TOPSIS algorithm
-│   ├── generate_data.py                # Data generator
-│   └── utils/
+├── mcdm/
+│   ├── app.py                              # Flask application entry point
+│   ├── requirements.txt                    # Python dependencies
+│   ├── Dockerfile                          # Docker image for Flask service
+│   │
+│   ├── config/                             # Configuration
+│   │   ├── __init__.py                     
+│   │
+│   ├── api/                                # API routes
+│   │   ├── __init__.py
+│   │   ├── analysis_routes.py              # Analysis endpoints
+│   │   └── health_routes.py                # Health check endpoints
+│   │
+│   ├── algorithms/                         # MCDM Algorithms
+│   │   ├── __init__.py
+│   │   ├── base_algorithm.py               # Abstract base class for algorithms
+│   │   ├── topsis.py                       # TOPSIS implementation
+│   │   ├── ahp.py                          # AHP implementation (future)
+│   │   ├── electre.py                      # ELECTRE implementation (future)
+│   │   └── promethee.py                    # PROMETHEE implementation (future)
+│   │
+│   ├── services/                           # Business logic services
+│   │   ├── __init__.py
+│   │   ├── analysis_service.py             # Analysis orchestration
+│   │   └── data_service.py                 # Data loading/saving
+│   │
+│   ├── utils/                              # Utility functions
+│   │   ├── __init__.py
+│   │   ├── db_connector.py                 # Database connection
+│   │   └── validators.py                   # Input validation
+│   │
+│   ├── models/                             # Data models/DTOs
+│   │   ├── __init__.py
+│   │   ├── analysis_request.py             # Request models
+│   │   └── analysis_response.py            # Response models
+│   │
+│   └── tests/                              # Unit tests
 │       ├── __init__.py
-│       ├── db_connector.py             # Database utilities
-│       └── visualization.py            # Data visualization (optional)
-│
+│       ├── test_topsis.py
+│       └── test_api.py
 ├── mysql/                              # Database Scripts
 │   ├── Dockerfile                      # Docker image for MySQL
 │   ├── init/

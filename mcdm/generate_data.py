@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 ============================================================================
 Data Generator Script for Retail Site Selection DSS
@@ -36,9 +35,9 @@ def load_env():
 load_env()
 
 DB_CONFIG = {
-    'host': os.getenv('MYSQL_HOST', 'localhost'),
-    'user': os.getenv('MYSQL_USER', 'root'),
-    'password': os.getenv('MYSQL_PASSWORD', 'your_password'),
+    'host': os.getenv('MYSQL_HOST', 'mysql'),
+    'user': os.getenv('MYSQL_USER', 'retailuser'),
+    'password': os.getenv('MYSQL_PASSWORD', 'retailpass'),
     'database': os.getenv('MYSQL_DATABASE', 'retail_dss'),
     'port': int(os.getenv('MYSQL_PORT', 3306)),
     'charset': 'utf8mb4'
@@ -191,20 +190,20 @@ def get_db_connection():
 def load_districts(conn):
     """Load danh sách quận từ database"""
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM District")
+    cursor.execute("SELECT * FROM district")
     districts = cursor.fetchall()
     cursor.close()
     print(f"✓ Loaded {len(districts)} districts")
     return districts
 
 def clear_existing_sites(conn):
-    """Xóa dữ liệu cũ trong bảng PotentialSite"""
+    """Xóa dữ liệu cũ trong bảng potential_site"""
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM PotentialSite")
+    cursor.execute("DELETE FROM potential_site")
     conn.commit()
     deleted = cursor.rowcount
     cursor.close()
-    print(f"✓ Cleared {deleted} existing records from PotentialSite")
+    print(f"✓ Cleared {deleted} existing records from potential_site")
 
 def insert_potential_site(conn, site_data, site_number):
     """Insert một địa điểm vào database"""
@@ -215,7 +214,7 @@ def insert_potential_site(conn, site_data, site_number):
     site_code = f"HCM-{district_name_short}-{site_number:03d}"
     
     query = """
-        INSERT INTO PotentialSite (
+        INSERT INTO potential_site (
             site_code, address, district_id, x_coordinate, y_coordinate,
             rent_cost, renovation_cost, competitor_count, distance_to_warehouse,
             floor_area, front_width, traffic_score, population_density,
@@ -308,12 +307,12 @@ def main():
         # Count by district
         cursor.execute("""
             SELECT d.name, COUNT(ps.id) as count
-            FROM District d
-            LEFT JOIN PotentialSite ps ON d.id = ps.district_id
+            FROM district d
+            LEFT JOIN potential_site ps ON d.id = ps.district_id
             GROUP BY d.id, d.name
             ORDER BY count DESC
         """)
-        print("\nSites by District:")
+        print("\nSites by district:")
         for row in cursor.fetchall():
             print(f"  {row['name']:20s}: {row['count']:3d} sites")
         
@@ -324,7 +323,7 @@ def main():
                 MIN(floor_area) as min_area, MAX(floor_area) as max_area, AVG(floor_area) as avg_area,
                 MIN(competitor_count) as min_comp, MAX(competitor_count) as max_comp, AVG(competitor_count) as avg_comp,
                 MIN(traffic_score) as min_traffic, MAX(traffic_score) as max_traffic, AVG(traffic_score) as avg_traffic
-            FROM PotentialSite
+            FROM potential_site
         """)
         stats = cursor.fetchone()
         

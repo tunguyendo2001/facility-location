@@ -23,11 +23,12 @@ server:
     include-message: always
     include-binding-errors: always
 
-# Python script configuration
-python:
-  executable: ${PYTHON_EXECUTABLE:python3}
-  script:
-    path: ${PYTHON_SCRIPT_PATH:mcdm/topsis.py}
+# MCDM Service Configuration
+mcdm:
+  service:
+    url: ${MCDM_SERVICE_URL:http://localhost:5000}
+    default-algorithm: topsis
+    timeout-seconds: 120
 
 # Actuator endpoints
 management:

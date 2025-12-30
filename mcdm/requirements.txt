@@ -1,0 +1,38 @@
+# ============================================================================
+# Flask MCDM Service Dependencies
+# ============================================================================
+
+# Web framework
+Flask==3.0.0
+Flask-CORS==4.0.0
+Werkzeug==3.0.1
+
+# Database
+mysql-connector-python==8.2.0
+
+# Data processing
+numpy==1.24.3
+pandas==2.0.3
+
+# Scientific computing (for future algorithms)
+scipy==1.11.4
+
+# Environment variables
+python-dotenv==1.0.0
+
+# Validation
+marshmallow==3.20.1
+
+# Logging
+python-json-logger==2.0.7
+
+# Testing
+pytest==7.4.3
+pytest-flask==1.3.0
+pytest-cov==4.1.0
+
+# Production Server
+gunicorn==21.2.0
+
+# Healthcheck dependency
+requests==2.31.0

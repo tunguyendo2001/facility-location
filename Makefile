@@ -1,19 +1,18 @@
 # ============================================================================
-# Makefile for Retail Site DSS
-# Provides shortcuts for common Docker and application commands
+# Makefile for Retail Site DSS (Updated with MCDM Service)
 # ============================================================================
 
-.PHONY: help build up down restart logs clean test generate-data analyze
+.PHONY: help build up down restart logs clean test analyze
 
-# Colors for output
 GREEN  := \033[0;32m
 YELLOW := \033[0;33m
-NC     := \033[0m # No Color
+BLUE   := \033[0;34m
+NC     := \033[0m
 
 help: ## Show this help message
 	@echo "$(GREEN)Retail Site DSS - Available Commands$(NC)"
 	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-20s$(NC) %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-25s$(NC) %s\n", $$1, $$2}'
 	@echo ""
 
 # ============================================================================
@@ -27,7 +26,10 @@ build: ## Build all Docker images
 up: ## Start all services
 	@echo "$(GREEN)Starting all services...$(NC)"
 	docker-compose up -d
-	@echo "$(GREEN)Services started! Backend: http://localhost:8080$(NC)"
+	@echo "$(GREEN)Services started!$(NC)"
+	@echo "$(BLUE)Backend API:     http://localhost:8080$(NC)"
+	@echo "$(BLUE)MCDM Service:    http://localhost:5000$(NC)"
+	@echo "$(BLUE)Adminer:         http://localhost:8081$(NC)"
 
 down: ## Stop all services
 	@echo "$(YELLOW)Stopping all services...$(NC)"
@@ -39,7 +41,11 @@ restart: ## Restart all services
 
 restart-backend: ## Restart only backend service
 	@echo "$(YELLOW)Restarting backend...$(NC)"
-	docker-compose restart backend
+	docker-compose restart manager
+
+restart-mcdm: ## Restart only MCDM service
+	@echo "$(YELLOW)Restarting MCDM service...$(NC)"
+	docker-compose restart mcdm-service
 
 restart-mysql: ## Restart only MySQL service
 	@echo "$(YELLOW)Restarting MySQL...$(NC)"
@@ -49,13 +55,13 @@ logs: ## Show logs from all services
 	docker-compose logs -f
 
 logs-backend: ## Show logs from backend only
-	docker-compose logs -f backend
+	docker-compose logs -f manager
+
+logs-mcdm: ## Show logs from MCDM service
+	docker-compose logs -f mcdm-service
 
 logs-mysql: ## Show logs from MySQL only
 	docker-compose logs -f mysql
-
-logs-python: ## Show logs from Python analyzer
-	docker-compose logs -f python-analyzer
 
 ps: ## Show running containers
 	docker-compose ps
@@ -65,13 +71,13 @@ ps: ## Show running containers
 # ============================================================================
 
 shell-backend: ## Open bash shell in backend container
-	docker-compose exec backend bash
+	docker-compose exec manager bash
+
+shell-mcdm: ## Open bash shell in MCDM service container
+	docker-compose exec mcdm-service bash
 
 shell-mysql: ## Open MySQL shell
 	docker-compose exec mysql mysql -u root -p
-
-shell-python: ## Open bash shell in Python container
-	docker-compose exec python-analyzer bash
 
 clean: ## Remove all containers, volumes, and images
 	@echo "$(YELLOW)Cleaning up Docker resources...$(NC)"
@@ -87,27 +93,43 @@ clean-build: clean build ## Clean and rebuild everything
 
 generate-data: ## Generate sample data (80 sites)
 	@echo "$(GREEN)Generating sample data...$(NC)"
-	docker-compose exec python-analyzer python generate_data.py
+	docker-compose exec mcdm-service python generate_data.py
 
-analyze: ## Run TOPSIS analysis
+analyze: ## Run TOPSIS analysis (default algorithm)
 	@echo "$(GREEN)Running TOPSIS analysis...$(NC)"
-	curl -s http://localhost:8080/api/analysis/run | jq '.'
+	@curl -s http://localhost:8080/api/analysis/run | jq '.'
+
+analyze-topsis: ## Run TOPSIS analysis explicitly
+	@echo "$(GREEN)Running TOPSIS analysis...$(NC)"
+	@curl -s -X POST http://localhost:8080/api/analysis/topsis | jq '.'
+
+analyze-ahp: ## Run AHP analysis (when implemented)
+	@echo "$(GREEN)Running AHP analysis...$(NC)"
+	@curl -s -X POST http://localhost:8080/api/analysis/ahp | jq '.'
+
+algorithms: ## List all supported MCDM algorithms
+	@echo "$(GREEN)Supported MCDM Algorithms:$(NC)"
+	@curl -s http://localhost:8080/api/analysis/algorithms | jq '.'
 
 top-sites: ## Show top 10 recommended sites
 	@echo "$(GREEN)Top 10 Recommended Sites:$(NC)"
-	curl -s http://localhost:8080/api/analysis/top-sites?limit=10 | jq '.'
+	@curl -s http://localhost:8080/api/analysis/top-sites?limit=10 | jq '.'
 
 statistics: ## Show site statistics
 	@echo "$(GREEN)Site Statistics:$(NC)"
-	curl -s http://localhost:8080/api/sites/statistics | jq '.'
+	@curl -s http://localhost:8080/api/sites/statistics | jq '.'
 
 health: ## Check backend health
 	@echo "$(GREEN)Checking backend health...$(NC)"
-	curl -s http://localhost:8080/api/analysis/health
+	@curl -s http://localhost:8080/api/analysis/health | jq '.'
+
+health-mcdm: ## Check MCDM service health
+	@echo "$(GREEN)Checking MCDM service health...$(NC)"
+	@curl -s http://localhost:5000/api/health | jq '.'
 
 districts: ## List all districts
 	@echo "$(GREEN)Districts:$(NC)"
-	curl -s http://localhost:8080/api/districts | jq '.'
+	@curl -s http://localhost:8080/api/districts | jq '.'
 
 # ============================================================================
 # Database Commands
@@ -118,7 +140,7 @@ db-backup: ## Backup database to file
 	docker-compose exec mysql mysqldump -u root -p retail_dss > database/backup/backup_$$(date +%Y%m%d_%H%M%S).sql
 	@echo "$(GREEN)Backup completed!$(NC)"
 
-db-restore: ## Restore database from latest backup (use: make db-restore FILE=backup.sql)
+db-restore: ## Restore database from backup (use: make db-restore FILE=backup.sql)
 	@if [ -z "$(FILE)" ]; then \
 		echo "$(YELLOW)Usage: make db-restore FILE=backup.sql$(NC)"; \
 		exit 1; \
@@ -130,9 +152,7 @@ db-restore: ## Restore database from latest backup (use: make db-restore FILE=ba
 db-reset: ## Reset database (drop and recreate)
 	@echo "$(YELLOW)Resetting database...$(NC)"
 	docker-compose exec mysql mysql -u root -p -e "DROP DATABASE IF EXISTS retail_dss; CREATE DATABASE retail_dss;"
-	docker-compose exec mysql mysql -u root -p retail_dss < database/init/01-schema.sql
-	docker-compose exec mysql mysql -u root -p retail_dss < database/init/02-seed-districts.sql
-	docker-compose exec mysql mysql -u root -p retail_dss < database/init/03-seed-configs.sql
+	docker-compose exec mysql mysql -u root -p retail_dss < mysql/init/01-schema.sql
 	@echo "$(GREEN)Database reset completed!$(NC)"
 
 # ============================================================================
@@ -141,9 +161,13 @@ db-reset: ## Reset database (drop and recreate)
 
 test-backend: ## Run backend tests
 	@echo "$(GREEN)Running backend tests...$(NC)"
-	cd backend && ./mvnw test
+	cd manager && ./mvnw test
 
-test-all: test-backend ## Run all tests
+test-mcdm: ## Run MCDM service tests
+	@echo "$(GREEN)Running MCDM service tests...$(NC)"
+	docker-compose exec mcdm-service pytest
+
+test-all: test-backend test-mcdm ## Run all tests
 
 # ============================================================================
 # Full Workflow Commands
@@ -151,12 +175,14 @@ test-all: test-backend ## Run all tests
 
 init: build up ## Initialize project (build and start)
 	@echo "$(GREEN)Waiting for services to be ready...$(NC)"
-	@sleep 10
+	@sleep 15
 	@echo "$(GREEN)Project initialized successfully!$(NC)"
-	@echo "$(GREEN)Backend API: http://localhost:8080$(NC)"
+	@echo "$(BLUE)Backend API:     http://localhost:8080$(NC)"
+	@echo "$(BLUE)MCDM Service:    http://localhost:5000$(NC)"
+	@echo "$(BLUE)Adminer:         http://localhost:8081$(NC)"
 	@echo "$(GREEN)Run 'make generate-data' to create sample data$(NC)"
 
-full-setup: init generate-data analyze ## Complete setup with data generation and analysis
+full-setup: init generate-data analyze ## Complete setup with data and analysis
 	@echo "$(GREEN)Full setup completed!$(NC)"
 	@echo "$(GREEN)Check results with: make top-sites$(NC)"
 
@@ -165,19 +191,24 @@ demo: ## Run a complete demo workflow
 	@echo "$(GREEN) Retail Site DSS - Demo Workflow$(NC)"
 	@echo "$(GREEN)========================================$(NC)"
 	@echo ""
-	@echo "$(GREEN)1. Checking backend health...$(NC)"
+	@echo "$(GREEN)1. Checking services health...$(NC)"
 	@make health
+	@make health-mcdm
 	@echo ""
 	@sleep 2
-	@echo "$(GREEN)2. Generating sample data...$(NC)"
+	@echo "$(GREEN)2. Listing supported algorithms...$(NC)"
+	@make algorithms
+	@echo ""
+	@sleep 2
+	@echo "$(GREEN)3. Generating sample data...$(NC)"
 	@make generate-data
 	@echo ""
 	@sleep 2
-	@echo "$(GREEN)3. Running TOPSIS analysis...$(NC)"
+	@echo "$(GREEN)4. Running TOPSIS analysis...$(NC)"
 	@make analyze
 	@echo ""
 	@sleep 2
-	@echo "$(GREEN)4. Showing top 10 sites...$(NC)"
+	@echo "$(GREEN)5. Showing top 10 sites...$(NC)"
 	@make top-sites
 	@echo ""
 	@echo "$(GREEN)========================================$(NC)"
@@ -192,7 +223,10 @@ watch-logs: ## Watch logs in real-time (all services)
 	docker-compose logs -f --tail=100
 
 watch-backend: ## Watch backend logs in real-time
-	docker-compose logs -f --tail=100 backend
+	docker-compose logs -f --tail=100 manager
+
+watch-mcdm: ## Watch MCDM service logs in real-time
+	docker-compose logs -f --tail=100 mcdm-service
 
 monitor: ## Show resource usage
 	docker stats $$(docker-compose ps -q)

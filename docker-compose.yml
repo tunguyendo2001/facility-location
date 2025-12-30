@@ -26,12 +26,15 @@ services:
       timeout: 5s
       retries: 5
 
+  # ============================================================================
+  # Adminer - MySQL Web UI
+  # ============================================================================
   adminer:
     image: adminer:4.8.1
-    container_name: mysql-ui
+    container_name: retail-dss-adminer
     restart: unless-stopped
     ports:
-      - "8081:8080"
+      - "${ADMINER_PORT:-8081}:8080"
     environment:
       ADMINER_DEFAULT_SERVER: mysql
       ADMINER_DESIGN: dracula
@@ -41,62 +44,74 @@ services:
       - retail-dss-network
 
   # ============================================================================
+  # Flask MCDM Service
+  # ============================================================================
+  mcdm-service:
+    # build:
+    #   context: ./mcdm
+    #   dockerfile: Dockerfile
+    image: retail-dss-mcdm-service:1.0.0
+    container_name: retail-dss-mcdm-service
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      FLASK_ENV: ${FLASK_ENV:-production}
+      FLASK_DEBUG: ${FLASK_DEBUG:-False}
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-retail_dss}
+      DB_USER: ${MYSQL_USER:-retailuser}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-retailpass}
+    ports:
+      - "${MCDM_PORT:-5000}:5000"
+    volumes:
+      - ./mcdm:/app
+      - ./mcdm/generate_data.py:/app/generate_data.py
+    networks:
+      - retail-dss-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============================================================================
   # Spring Boot Backend Service
   # ============================================================================
   manager:
     # build:
     #   context: ./manager
     #   dockerfile: Dockerfile
-    image: retail-rss-backend:1.0.0
+    image: retail-dss-backend:1.0.0
     container_name: retail-dss-backend
     restart: unless-stopped
     depends_on:
       mysql:
+        condition: service_healthy
+      mcdm-service:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-prod}
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-retail_dss}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-retailuser}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-retailpass}
-      PYTHON_EXECUTABLE: python3
-      PYTHON_SCRIPT_PATH: /app/mcdm/topsis.py
+      # MCDM Service configuration
+      MCDM_SERVICE_URL: http://mcdm-service:5000
     ports:
-      - "0.0.0.0:${BACKEND_PORT:-8080}:8080"
+      - "${BACKEND_PORT:-8080}:8080"
     volumes:
-      - ./mcdm:/app/mcdm
       - ./manager/logs:/app/logs
     networks:
       - retail-dss-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://${BACKEND_HOST:-localhost}:8080/api/analysis/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/analysis/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
-
-  # ============================================================================
-  # mcdm Container (Optional - for standalone execution)
-  # ============================================================================
-  mcdm-analyzer:
-    build:
-      context: ./mcdm
-      dockerfile: Dockerfile
-    container_name: retail-dss-python
-    restart: "no"
-    depends_on:
-      mysql:
-        condition: service_healthy
-    environment:
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_NAME: ${MYSQL_DATABASE:-retail_dss}
-      DB_USER: ${MYSQL_USER:-retailuser}
-      DB_PASSWORD: ${MYSQL_PASSWORD:-retailpass}
-    volumes:
-      - ./mcdm:/app
-    networks:
-      - retail-dss-network
-    command: tail -f /dev/null  # Keep container running
 
   # ============================================================================
   # Nginx Reverse Proxy (Optional)
@@ -107,6 +122,7 @@ services:
     restart: unless-stopped
     depends_on:
       - manager
+      - mcdm-service
     ports:
       - "${NGINX_PORT:-80}:80"
     volumes:
