@@ -46,10 +46,10 @@ Hệ thống DSS này giúp các doanh nghiệp bán lẻ đưa ra quyết đị
          ▼
 ┌─────────────────┐      HTTP/REST      ┌──────────────────┐
 │  Spring Boot    │ ◄─────────────────► │  Flask MCDM      │
-│    Backend      │                      │    Service       │
-└────────┬────────┘                      └────────┬─────────┘
-         │                                         │
-         │            ┌────────────────────────────┘
+│    Backend      │                     │    Service       │
+└────────┬────────┘                     └────────┬─────────┘
+         │                                       │
+         │            ┌──────────────────────────┘
          │            │
          ▼            ▼
 ┌─────────────────────────┐
@@ -124,10 +124,10 @@ make demo
 
 ```bash
 # Run with default TOPSIS algorithm
-GET http://localhost:8080/api/analysis/run
+POST http://localhost:8080/api/analysis/run
 
 # Run with specific algorithm
-GET http://localhost:8080/api/analysis/run?algorithm=topsis&configId=1&topN=10
+POST http://localhost:8080/api/analysis/run?algorithm=topsis&configId=1&topN=10
 
 # Run specific algorithm via POST
 POST http://localhost:8080/api/analysis/topsis

@@ -33,7 +33,7 @@ public class PotentialSite {
     @Column(name = "y_coordinate")
     private Double yCoordinate;
     
-    // Cost criteria (Lower is better)
+    // Cost criteria
     @Column(name = "rent_cost", nullable = false)
     private Double rentCost;
     
@@ -46,7 +46,7 @@ public class PotentialSite {
     @Column(name = "distance_to_warehouse", nullable = false)
     private Double distanceToWarehouse;
     
-    // Benefit criteria (Higher is better)
+    // Benefit criteria
     @Column(name = "floor_area", nullable = false)
     private Double floorArea;
     
@@ -71,20 +71,6 @@ public class PotentialSite {
     
     @Column(name = "near_market")
     private Boolean nearMarket = false;
-    
-    // TOPSIS results
-    @Column(name = "topsis_score")
-    private Double topsisScore;
-    
-    @Column(name = "rank_position")
-    private Integer rankPosition;
-    
-    @Column(name = "last_analysis_date")
-    private LocalDateTime lastAnalysisDate;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "config_used_id")
-    private ExpertCriteriaConfig configUsed;
     
     // Metadata
     @Column(length = 20)

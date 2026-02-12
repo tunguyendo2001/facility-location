@@ -79,14 +79,14 @@ services:
       start_period: 40s
 
   # ============================================================================
-  # Spring Boot Backend Service
+  # Spring Boot Manager Service
   # ============================================================================
   manager:
     # build:
     #   context: ./manager
     #   dockerfile: Dockerfile
-    image: retail-dss-backend:1.0.0
-    container_name: retail-dss-backend
+    image: retail-dss-manager:1.0.0
+    container_name: retail-dss-manager
     restart: unless-stopped
     depends_on:
       mysql:

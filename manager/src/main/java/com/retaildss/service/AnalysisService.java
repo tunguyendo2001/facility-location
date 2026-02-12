@@ -24,23 +24,22 @@ public class AnalysisService {
     private String defaultAlgorithm;
     
     /**
-     * Chạy phân tích MCDM bằng cách gọi Flask service
-     * 
-     * @param algorithm Algorithm name (topsis, ahp, etc.)
-     * @param configId Configuration ID (null = use active config)
-     * @param topN Number of top results to return
-     * @return JSON response từ Flask service
+     * Run MCDM analysis by calling Flask service
+     * Results will be saved to evaluation_result table by Flask service
      */
-    public String runMcdmAnalysis(String algorithm, Long configId, Integer topN) {
+    public String runMcdmAnalysis(String algorithm, Long configId, Long userId, Integer topN) {
         try {
-            log.info("Calling MCDM service: algorithm={}, configId={}, topN={}", 
-                     algorithm, configId, topN);
+            log.info("Calling MCDM service: algorithm={}, configId={}, userId={}, topN={}", 
+                     algorithm, configId, userId, topN);
             
             // Prepare request body
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("algorithm", algorithm != null ? algorithm : defaultAlgorithm);
             if (configId != null) {
                 requestBody.put("config_id", configId);
+            }
+            if (userId != null) {
+                requestBody.put("user_id", userId);
             }
             if (topN != null) {
                 requestBody.put("top_n", topN);
@@ -80,10 +79,22 @@ public class AnalysisService {
     }
     
     /**
-     * Convenience method - use default parameters
+     * Get latest batch results from Flask service
      */
-    public String runTopsisAnalysis() {
-        return runMcdmAnalysis("topsis", null, 10);
+    public String getLatestBatchResults(int limit) {
+        try {
+            String url = mcdmServiceUrl + "/api/results/latest?limit=" + limit;
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            
+            if (response.getStatusCode().is2xxSuccessful()) {
+                return response.getBody();
+            } else {
+                throw new RuntimeException("Failed to get latest batch results");
+            }
+        } catch (Exception e) {
+            log.error("Error getting latest batch results", e);
+            throw new RuntimeException("Failed to get latest batch results: " + e.getMessage(), e);
+        }
     }
     
     /**

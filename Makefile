@@ -21,11 +21,11 @@ help: ## Show this help message
 
 build: ## Build all Docker images
 	@echo "$(GREEN)Building Docker images...$(NC)"
-	docker-compose build
+	docker compose build
 
 up: ## Start all services
 	@echo "$(GREEN)Starting all services...$(NC)"
-	docker-compose up -d
+	docker compose up -d
 	@echo "$(GREEN)Services started!$(NC)"
 	@echo "$(BLUE)Backend API:     http://localhost:8080$(NC)"
 	@echo "$(BLUE)MCDM Service:    http://localhost:5000$(NC)"
@@ -33,56 +33,56 @@ up: ## Start all services
 
 down: ## Stop all services
 	@echo "$(YELLOW)Stopping all services...$(NC)"
-	docker-compose down
+	docker compose down
 
 restart: ## Restart all services
 	@echo "$(YELLOW)Restarting all services...$(NC)"
-	docker-compose restart
+	docker compose restart
 
 restart-backend: ## Restart only backend service
 	@echo "$(YELLOW)Restarting backend...$(NC)"
-	docker-compose restart manager
+	docker compose restart manager
 
 restart-mcdm: ## Restart only MCDM service
 	@echo "$(YELLOW)Restarting MCDM service...$(NC)"
-	docker-compose restart mcdm-service
+	docker compose restart mcdm-service
 
 restart-mysql: ## Restart only MySQL service
 	@echo "$(YELLOW)Restarting MySQL...$(NC)"
-	docker-compose restart mysql
+	docker compose restart mysql
 
 logs: ## Show logs from all services
-	docker-compose logs -f
+	docker compose logs -f
 
 logs-backend: ## Show logs from backend only
-	docker-compose logs -f manager
+	docker compose logs -f manager
 
 logs-mcdm: ## Show logs from MCDM service
-	docker-compose logs -f mcdm-service
+	docker compose logs -f mcdm-service
 
 logs-mysql: ## Show logs from MySQL only
-	docker-compose logs -f mysql
+	docker compose logs -f mysql
 
 ps: ## Show running containers
-	docker-compose ps
+	docker compose ps
 
 # ============================================================================
 # Development Commands
 # ============================================================================
 
 shell-backend: ## Open bash shell in backend container
-	docker-compose exec manager bash
+	docker compose exec manager bash
 
 shell-mcdm: ## Open bash shell in MCDM service container
-	docker-compose exec mcdm-service bash
+	docker compose exec mcdm-service bash
 
 shell-mysql: ## Open MySQL shell
-	docker-compose exec mysql mysql -u root -p
+	docker compose exec mysql mysql -u root -p
 
 clean: ## Remove all containers, volumes, and images
 	@echo "$(YELLOW)Cleaning up Docker resources...$(NC)"
-	docker-compose down -v --remove-orphans
-	docker-compose rm -f
+	docker compose down -v --remove-orphans
+	docker compose rm -f
 
 clean-build: clean build ## Clean and rebuild everything
 	@echo "$(GREEN)Clean build completed!$(NC)"
@@ -93,11 +93,11 @@ clean-build: clean build ## Clean and rebuild everything
 
 generate-data: ## Generate sample data (80 sites)
 	@echo "$(GREEN)Generating sample data...$(NC)"
-	docker-compose exec mcdm-service python generate_data.py
+	docker compose exec mcdm-service python generate_data.py
 
 analyze: ## Run TOPSIS analysis (default algorithm)
 	@echo "$(GREEN)Running TOPSIS analysis...$(NC)"
-	@curl -s http://localhost:8080/api/analysis/run | jq '.'
+	@curl -s -X POST http://localhost:8080/api/analysis/run | jq '.'
 
 analyze-topsis: ## Run TOPSIS analysis explicitly
 	@echo "$(GREEN)Running TOPSIS analysis...$(NC)"
@@ -137,7 +137,7 @@ districts: ## List all districts
 
 db-backup: ## Backup database to file
 	@echo "$(GREEN)Backing up database...$(NC)"
-	docker-compose exec mysql mysqldump -u root -p retail_dss > database/backup/backup_$$(date +%Y%m%d_%H%M%S).sql
+	docker compose exec mysql mysqldump -u root -p retail_dss > database/backup/backup_$$(date +%Y%m%d_%H%M%S).sql
 	@echo "$(GREEN)Backup completed!$(NC)"
 
 db-restore: ## Restore database from backup (use: make db-restore FILE=backup.sql)
@@ -146,13 +146,13 @@ db-restore: ## Restore database from backup (use: make db-restore FILE=backup.sq
 		exit 1; \
 	fi
 	@echo "$(YELLOW)Restoring database from $(FILE)...$(NC)"
-	docker-compose exec -T mysql mysql -u root -p retail_dss < $(FILE)
+	docker compose exec -T mysql mysql -u root -p retail_dss < $(FILE)
 	@echo "$(GREEN)Restore completed!$(NC)"
 
 db-reset: ## Reset database (drop and recreate)
 	@echo "$(YELLOW)Resetting database...$(NC)"
-	docker-compose exec mysql mysql -u root -p -e "DROP DATABASE IF EXISTS retail_dss; CREATE DATABASE retail_dss;"
-	docker-compose exec mysql mysql -u root -p retail_dss < mysql/init/01-schema.sql
+	docker compose exec mysql mysql -u root -p -e "DROP DATABASE IF EXISTS retail_dss; CREATE DATABASE retail_dss;"
+	docker compose exec mysql mysql -u root -p retail_dss < mysql/init/01-schema.sql
 	@echo "$(GREEN)Database reset completed!$(NC)"
 
 # ============================================================================
@@ -165,7 +165,7 @@ test-backend: ## Run backend tests
 
 test-mcdm: ## Run MCDM service tests
 	@echo "$(GREEN)Running MCDM service tests...$(NC)"
-	docker-compose exec mcdm-service pytest
+	docker compose exec mcdm-service pytest
 
 test-all: test-backend test-mcdm ## Run all tests
 
@@ -220,16 +220,16 @@ demo: ## Run a complete demo workflow
 # ============================================================================
 
 watch-logs: ## Watch logs in real-time (all services)
-	docker-compose logs -f --tail=100
+	docker compose logs -f --tail=100
 
 watch-backend: ## Watch backend logs in real-time
-	docker-compose logs -f --tail=100 manager
+	docker compose logs -f --tail=100 manager
 
 watch-mcdm: ## Watch MCDM service logs in real-time
-	docker-compose logs -f --tail=100 mcdm-service
+	docker compose logs -f --tail=100 mcdm-service
 
 monitor: ## Show resource usage
-	docker stats $$(docker-compose ps -q)
+	docker stats $$(docker compose ps -q)
 
 # ============================================================================
 # Default target
